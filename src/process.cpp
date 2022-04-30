@@ -17,7 +17,8 @@ Process::Process(int pid) : pid_(pid) {}
 
 int Process::Pid() { return pid_; }
 
-float Process::CpuUtilization() const {
+float Process::CpuUtilization() const
+{
   long total_time;
   float total_time_seconds;
   long utime;
@@ -27,6 +28,7 @@ float Process::CpuUtilization() const {
   long uptime;
   long starttime;
   float start_time_seconds;
+  float cpu_utilization;
   int pid = pid_;
 
   utime =
@@ -52,11 +54,11 @@ float Process::CpuUtilization() const {
 
   start_time_seconds = starttime / (float)sysconf(_SC_CLK_TCK);
 
-  if (float(uptime - start_time_seconds) == 0.0) {
-    return 0.0;
-  } else {
-    return total_time_seconds / float(uptime - start_time_seconds);
-  }
+  cpu_utilization = total_time_seconds / float(uptime - start_time_seconds);
+
+  if (cpu_utilization > 1) cpu_utilization = 0.0;
+  
+  return cpu_utilization;
 }
 
 string Process::Command() { return LinuxParser::Command(Pid()); }
@@ -67,6 +69,7 @@ string Process::User() { return LinuxParser::User(Pid()); }
 
 long int Process::UpTime() { return LinuxParser::UpTime(Pid()); }
 
-bool Process::operator<(Process const& a) const {
+bool Process::operator<(Process const &a) const
+{
   return a.CpuUtilization() < CpuUtilization();
 }
