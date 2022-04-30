@@ -56,7 +56,9 @@ float Process::CpuUtilization() const
 
   cpu_utilization = total_time_seconds / float(uptime - start_time_seconds);
 
-  if (cpu_utilization > 1) cpu_utilization = 0.0;
+  if (cpu_utilization >= 1) {
+      cpu_utilization = 0.0;
+  }
   
   return cpu_utilization;
 }
