@@ -21,7 +21,7 @@ Processor& System::Cpu() { return cpu_; }
 // TODO: Return etc etc
 vector<Process>& System::Processes() {
   vector<int> pids = LinuxParser::Pids();
-  processes_ = {};
+  processes_.clear();
   for (int pid : pids) {
     processes_.push_back(Process(pid));
   }

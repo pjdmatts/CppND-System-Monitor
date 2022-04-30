@@ -17,61 +17,28 @@ Process::Process(int pid) : pid_(pid) {}
 
 int Process::Pid() { return pid_; }
 
+// https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat/16736599#16736599
 float Process::CpuUtilization() const
 {
-  long total_time;
-  float total_time_seconds;
-  long utime;
-  long stime;
-  long cutime;
-  long cstime;
-  long uptime;
-  long starttime;
-  float start_time_seconds;
-  float cpu_utilization;
-  int pid = pid_;
-
-  utime =
-      std::stol(LinuxParser::ProcStats(pid)[LinuxParser::ProcStates::pUtime_]);
-  stime =
-      std::stol(LinuxParser::ProcStats(pid)[LinuxParser::ProcStates::pStime_]);
-
-  total_time = utime + stime;
-
-  cutime =
-      std::stol(LinuxParser::ProcStats(pid)[LinuxParser::ProcStates::pCutime_]);
-  cstime =
-      std::stol(LinuxParser::ProcStats(pid)[LinuxParser::ProcStates::pCstime_]);
-
-  total_time = total_time + cutime + cstime;
-
-  total_time_seconds = total_time / (float)sysconf(_SC_CLK_TCK);
-
-  uptime = LinuxParser::UpTime();
-
-  starttime = std::stof(
-      LinuxParser::ProcStats(pid)[LinuxParser::ProcStates::pStarttime_]);
-
-  start_time_seconds = starttime / (float)sysconf(_SC_CLK_TCK);
-
-  cpu_utilization = total_time_seconds / float(uptime - start_time_seconds);
-
-  if (cpu_utilization >= 1) {
-      cpu_utilization = 0.0;
-  }
-  
-  return cpu_utilization;
+    long active_ticks = LinuxParser::ActiveJiffies(pid_);
+    float total_seconds = LinuxParser::UpTime() - Process::UpTime();
+    if(total_seconds != 0.0){
+        return ((active_ticks/ sysconf(_SC_CLK_TCK)) / total_seconds);
+    } else {
+        return 0.0;
+    }
+    
 }
 
-string Process::Command() { return LinuxParser::Command(Pid()); }
+string Process::Command() { return LinuxParser::Command(pid_); }
 
-string Process::Ram() { return LinuxParser::Ram(Pid()); }
+string Process::Ram() { return LinuxParser::Ram(pid_); }
 
-string Process::User() { return LinuxParser::User(Pid()); }
+string Process::User() { return LinuxParser::User(pid_); }
 
-long int Process::UpTime() { return LinuxParser::UpTime(Pid()); }
+long int Process::UpTime() const { return LinuxParser::UpTime(pid_); }
 
 bool Process::operator<(Process const &a) const
 {
-  return a.CpuUtilization() < CpuUtilization();
+    return a.CpuUtilization() < CpuUtilization();
 }
